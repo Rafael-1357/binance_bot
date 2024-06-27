@@ -1,25 +1,9 @@
-require('dotenv').config()
+require('dotenv').config();
 
-const BASE_URL = process.env.BASE_URL
-const URL_STATUS = '/sapi/v1/system/status';
+const webSocket = require('ws');
+const BinanceWebSocket = new webSocket(`${process.env.STREAM_URL}/${process.env.SYMBOL.toLowerCase()}@ticker`)
 
-async function start() {
-    const status = await fetch(`${BASE_URL}${URL_STATUS}`, {
-        method: "GET",
-        headers: {
-            "Content-type": "application/json",
-        },
-    })
-
-    const statusResponse = await status.json();
-    return statusResponse
+BinanceWebSocket.onmessage = (e) => {
+    console.clear();
+    console.log(e.data);
 }
-
-start().then(response => {
-    console.log(response);
-}).catch(error => {
-    console.error('Error:', error);
-})
-
-
-

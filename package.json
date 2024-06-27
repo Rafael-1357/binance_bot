@@ -1,8 +1,15 @@
 {
-  "devDependencies": {
-    "nodemon": "^3.1.4"
+  "name": "binance_bot",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "node -r dotenv/config index.js"
   },
+  "author": "",
+  "license": "ISC",
+  "description": "",
   "dependencies": {
-    "dotenv": "^16.4.5"
+    "dotenv": "^16.4.5",
+    "ws": "^8.17.1"
   }
 }

@@ -1,3 +1,0 @@
-- Descobrir dados necessários para realizar a estratégia.
-
-- Descobrir forma de realizar requisições a API da BINANCE
