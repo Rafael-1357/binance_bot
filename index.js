@@ -9,6 +9,8 @@ const limit = 43200;
 let highs = [];
 let lows = [];
 let psars = [];
+let currentPSAR;
+let purchased;
 
 async function getKlines(symbol, interval, limit) {
     const endpoint = `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`;
@@ -51,14 +53,15 @@ function sequential() {
 
         let allPsarLessThanLows = last10Psar.every((value, index) => value < last10Lows[index]);
 
-        if (allPsarLessThanLows) {
+        if (allPsarLessThanLows && purchased === false) {
             console.log("Hora de comprar");
+            purchased = true
         } else {
-            console.log("Nãi é hora de comprar");
+            console.log("Não é hora de comprar");
         }
 }
 
-const BinanceWebSocket = new WebSocket(`${process.env.STREAM_URL}/${process.env.SYMBOL.toLowerCase()}@kline_1m`);
+const BinanceWebSocket = new WebSocket('wss://stream.binance.com:9443/ws/btcusdt@kline_1m');
 
 BinanceWebSocket.onmessage = async (event) => {
     const data = JSON.parse(event.data);
@@ -77,7 +80,15 @@ BinanceWebSocket.onmessage = async (event) => {
         lows.push(low);
 
         psars = await calculatePsar(highs, lows, 0.02, 0.2, highs.length);
+        currentPSAR = psars.shift(-1)
         console.log(psars.slice(-1));
         sequential()
+    }
+
+    if(purchased) {
+        if (kline.l > currentPSAR) {
+            console.log("vendendo...");
+            purchased = false
+        }
     }
 };
