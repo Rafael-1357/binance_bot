@@ -3,16 +3,15 @@ const { Indicators } = require('@ixjb94/indicators');
 const WebSocket = require('ws');
 const ind = new Indicators;
 
-const symbol = process.env.SYMBOL;
-const interval = process.env.INTERVAL;
-const limit = process.env.LIMIT;
-const baseURL = process.env.BASE_URL
+const symbol = 'BTCUSDT';
+const interval = '1m';
+const limit = 43200;
 let highs = [];
 let lows = [];
 let psars = [];
 
 async function getKlines(symbol, interval, limit) {
-    const endpoint = `${baseURL}${symbol}&interval=${interval}&limit=${limit}`;
+    const endpoint = `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`;
     const response = await fetch(endpoint);
     const data = await response.json();
     return data.map(kline => ({
@@ -59,7 +58,7 @@ function sequential() {
         }
 }
 
-const BinanceWebSocket = new WebSocket(`${process.env.STREAM_URL}/${symbol.toLowerCase()}@kline_1m`);
+const BinanceWebSocket = new WebSocket(`${process.env.STREAM_URL}/${process.env.SYMBOL.toLowerCase()}@kline_1m`);
 
 BinanceWebSocket.onmessage = async (event) => {
     const data = JSON.parse(event.data);
