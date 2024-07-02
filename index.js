@@ -35,8 +35,12 @@ async function calculatePsar(high, low, af, afm, size) {
     return await ind.psar(high, low, af, afm, size);
 }
 
-(async () => {
+async function klinesData(){
     const klines = await getKlines(symbol, interval, limit);
+
+    highs = []
+    lows - []
+    psars = []
 
     klines.forEach(kline => {
         highs.push(kline.high);
@@ -45,21 +49,23 @@ async function calculatePsar(high, low, af, afm, size) {
 
     psars = await calculatePsar(highs, lows, 0.02, 0.2, klines.length);
     console.log(psars.slice(-10));
-})();
-
-function sequential() {
-        let last10Lows = lows.slice(-10);
-        let last10Psar = psars.slice(-10);
-
-        let allPsarLessThanLows = last10Psar.every((value, index) => value < last10Lows[index]);
-
-        if (allPsarLessThanLows && purchased === false) {
-            console.log("Hora de comprar");
-            purchased = true
-        } else {
-            console.log("Não é hora de comprar");
-        }
 }
+
+klinesData()
+
+// function sequential() {
+//         let last10Lows = lows.slice(-10);
+//         let last10Psar = psars.slice(-10);
+
+//         let allPsarLessThanLows = last10Psar.every((value, index) => value < last10Lows[index]);
+
+//         if (allPsarLessThanLows && purchased === false) {
+//             console.log("Hora de comprar");
+//             purchased = true
+//         } else {
+//             console.log("Não é hora de comprar");
+//         }
+// }
 
 const BinanceWebSocket = new WebSocket('wss://stream.binance.com:9443/ws/btcusdt@kline_1m');
 
@@ -68,27 +74,28 @@ BinanceWebSocket.onmessage = async (event) => {
     const kline = data.k;
 
     if (kline.x) {
-        const high = parseFloat(kline.h);
-        const low = parseFloat(kline.l);
+        klinesData()
+    //     const high = parseFloat(kline.h);
+    //     const low = parseFloat(kline.l);
 
-        if (highs.length >= limit) {
-            highs.shift();
-            lows.shift();
-        }
+    //     if (highs.length >= limit) {
+    //         highs.shift();
+    //         lows.shift();
+    //     }
 
-        highs.push(high);
-        lows.push(low);
+    //     highs.push(high);
+    //     lows.push(low);
 
-        psars = await calculatePsar(highs, lows, 0.02, 0.2, highs.length);
-        currentPSAR = psars.shift(-1)
-        console.log(psars.slice(-1));
-        sequential()
-    }
+    //     psars = await calculatePsar(highs, lows, 0.02, 0.2, highs.length);
+    //     currentPSAR = psars.shift(-1)
+    //     console.log(psars.slice(-1));
+    //     sequential()
+    // }
 
-    if(purchased) {
-        if (kline.l > currentPSAR) {
-            console.log("vendendo...");
-            purchased = false
-        }
+    // if(purchased) {
+    //     if (kline.l > currentPSAR) {
+    //         console.log("vendendo...");
+    //         purchased = false
+    //     }
     }
 };

@@ -1,53 +1,43 @@
 const { Indicators } = require('@ixjb94/indicators');
 const ind = new Indicators;
+const WebSocket = require('ws');
+
+const symbol = 'BTCUSDT';
+const interval = '1m';
+let limit = 1000;
+let highs = []
+let lows = []
+let psars = []
 
 async function getKlines(symbol, interval, limit) {
     const endpoint = `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`;
     const response = await fetch(endpoint);
     const data = await response.json();
-    return data.map(kline => ({
-        openTime: kline[0],
-        open: parseFloat(kline[1]),
-        high: parseFloat(kline[2]),
-        low: parseFloat(kline[3]),
-        close: parseFloat(kline[4]),
-        volume: parseFloat(kline[5]),
-        closeTime: kline[6],
-        quoteAssetVolume: kline[7],
-        numberOfTrades: kline[8],
-        takerBuyBaseAssetVolume: kline[9],
-        takerBuyQuoteAssetVolume: kline[10],
-    }));
+    return data.map(kline => (
+        highs.push(kline[2]),
+        lows.push(kline[3])
+    ));
 }
 
-async function psart(high, low, af, afm, size) {
-    return await ind.psar(high, low, af, afm, size);
-}
+getKlines(symbol, interval, limit)
 
-(async () => {
-    const symbol = 'BTCUSDT';
-    const interval = '1h';
-    const limit = 5000;
-    let highs = []
-    let lows = []
-    let psars = []
 
-    const klines = await getKlines(symbol, interval, limit);
+const BinanceWebSocket = new WebSocket('wss://stream.binance.com:9443/ws/btcusdt@kline_1m');
 
-    klines.forEach(kline => {
-        highs.push(kline.high)
-        lows.push(kline.low)
-    });
+BinanceWebSocket.onmessage = async (event) => {
+    let data = JSON.parse(event.data);
+    let kline = data.k;
 
-    psart(highs, lows, 0.02, 0.2, klines.length).then(result => {
-        result.forEach(kline => {
-            psars.push(kline);
-        });
+    if (kline.x) {
+        highs.push(kline.h);
+        lows.push(kline.l);
+        console.log('-------------------')
+        console.log(kline.h)
+        console.log(highs.slice(-1))
+        console.log(kline.l)
+        console.log(lows.slice(-1))
+        console.log(highs.length)
+        console.log('-------------------')
+    }
+};
 
-        let lastTenElementsSmall = psars.slice(-10);
-        console.log(lastTenElementsSmall);
-
-    }).catch(error => {
-        console.error(error);
-    });
-})();
