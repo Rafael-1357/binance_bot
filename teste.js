@@ -6,8 +6,10 @@ const interval = '1m';
 const limit = 1000;
 let highs = [];
 let lows = [];
-let psars= [];
+let psars = [];
 let currentPSAR;
+let stop;
+let purchased = false;
 
 const input = {
     high: highs,
@@ -27,18 +29,21 @@ async function getKlines(symbol, interval, limit) {
 }
 
 function purchase() {
-        let lastTenLows = lows.slice(-10);
-        let lastTenPsar = psars.slice(-10);
-        let allPsarLessThanLows = lastTenPsar.every((value, index) => value < lastTenLows[index]);
+    let lastTenLows = lows.slice(-10);
+    let lastTenPsar = psars.slice(-10);
+    let allPsarLessThanLows = lastTenPsar.every((value, index) => value < lastTenLows[index]);
 
-        if(allPsarLessThanLows) {
+    if(allPsarLessThanLows) {
+        purchased = true
+        console.log('Comprado');
+    }
 
-        }
 }
 
 (async () => {
     await getKlines(symbol, interval, limit);
 
+    // Inicia comunicação WEBSOCKET com a binance
     const BinanceWebSocket = new WebSocket('wss://stream.binance.com:9443/ws/btcusdt@kline_1m');
 
     BinanceWebSocket.onmessage = async (event) => {
@@ -53,12 +58,28 @@ function purchase() {
             input.high = highs;
             input.low = lows;
 
-            let psars = PSAR.calculate(input);
-            currentPSAR = psars[psars.length - 1]
-            console.log(psars.slice(-10))
+            // Calcular o parabolic SAR
+            psars = PSAR.calculate(input);
+
+            // Verificação para realizar compra
+            purchase();
+
+            // Último PSAR
+            currentPSAR = psars.at(-1);
+            console.log(psars.at(-1));
+
+            // Verifica se o último kline é positivo
             let isPositive = parseFloat(kline.c) > parseFloat(kline.o);
-            isPositive ? "Kline fechou positivo" : "Kline fechou negativo");
+            if (isPositive) { stop = kline.l }
+            console.log(stop)
             console.log('-----------------------------------------------');
+        }
+
+        if (purchased) {
+            if (kline.l > stop) {
+                console.log('vendendo...')
+                purchased = false
+            }
         }
     };
 })();
